@@ -12,7 +12,7 @@ particle = 10        # particle number in the box
 random = 0           # random initial condition (0:off, 1:on)
 
 # array
-if random = 1:       # random initial condition (0:off, 1:on)
+if random == 1:       # random initial condition (0:off, 1:on)
   m = np.zeros(particle)          # mass of particles (m)
   r = np.zeros((3, particle))     # coordinates of particles (x, y, z)
   v = np.zeros((3, particle))     # velocity of particles (vx, vy, vz)
@@ -27,6 +27,9 @@ p = np.zeros((3, particle))       # momentum of particles (px, py, pz)
   
 rho = np.zeros((cells, cells, cells))      # empty 3D box of rho (ρ, density)
 phi = np.zeros((cells, cells, cells))      # empty 3D box of phi (Φ, potential field)
+phi_ghost = np.zeros((cells+2, cells+2, cells+2))
+residual = np.zeros((cells, cells, cells))
+force = np.zeros((3, cells, cells, cells))
 
 # derived constants
 dx = L/cells         # spatial resolution
@@ -38,6 +41,7 @@ for i in range(3):   # p = m*v
 # -------------------------------------------------------------------
 # define initial condition
 # -------------------------------------------------------------------
+# !!need to add ghost zones for phi!!
 
 
 # -------------------------------------------------------------------
@@ -74,16 +78,53 @@ def TSC()
 # Poisson solver
 # -------------------------------------------------------------------
 # ρ to Φ (parallel later)
-for i in range(cells):
-  for j in range(cells):
-    for k in range(cells):
-      phi[i][j][k] = (phi[i-1][j][k] + phi[i+1][j][k] + phi[i][j-1][k] + phi[i][j+1][k] + phi[i][j][k-1] + phi[i][j][k+1] - rho[i][j][k]*dx*dx) / 6
+relax = 1.6
+errorsum = 1
 
+def phi2phighost()
+for i in range(cells):
+    for j in range(cells):
+      for k in range(cells):
+        phi_ghost[i+1][j+1][k+1] = phi[i][j][k]
+        
+def phighost2phi()
+for i in range(cells):
+    for j in range(cells):
+      for k in range(cells):
+         phi[i][j][k] = phi_ghost[i+1][j+1][k+1]
+
+phi2phighost()
+          
+while errorsum > 10**(-12):
+  for i in range(cells):
+    for j in range(cells):
+      for k in range(cells):
+        residual[i][j][k] = phi_ghost[i][j+1][k+1] + phi_ghost[i+2][j+1][k+1] + phi_ghost[i+1][j][k+1] + phi_ghost[i+1][j+2][k+1] + phi_ghost[i+1][j+1][k] + phi_ghost[i+1][j+1][k+2] - 6*phi_ghost[i+1][j+1][k+1] - rho[i][j][k]*dx*dx
+        phi_ghost[i+1][j+1][k+1] = phi_ghost[i+1][j+1][k+1] + relax * residual[i][j][k] / 6
+
+  phighost2phi()
+  
+  errorsum = 0
+  for i in range(cells):
+    for j in range(cells):
+      for k in range(cells):
+        errorsum += abs(residual[i][j][k]/phi[i][j][k]) / cells**2
+      
 
 # FFT
+rhok = np.fft.rfft( rho )
+k = 0.5           #!!need to be replaced!!
+phiF = np.fft.irfft( -rhok/k**2 )
 
 
 # inter-particle force
+for i in range(cells):
+    for j in range(cells):
+      for k in range(cells):
+        gfield[1][i][j][k] = -(phi[i+1][j][k]-phi[i-1][j][k])*0.5/dx
+        gfield[2][i][j][k] = -(phi[i][j+1][k]-phi[i][j-1][k])*0.5/dx
+        gfield[3][i][j][k] = -(phi[i][j][k+1]-phi[i][j][k-1])*0.5/dx
+
 
 # -------------------------------------------------------------------
 # Orbit integration (KDK, DKD)
