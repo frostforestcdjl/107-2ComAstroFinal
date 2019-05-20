@@ -77,13 +77,14 @@ def TSC()
 # -------------------------------------------------------------------
 # ρ to Φ (parallel later)
 relax = 1.6
+errorsum = 1
 
 while errorsum > 10**(-12):
   for i in range(cells):
     for j in range(cells):
       for k in range(cells):
         residual[i][j][k] = phi[i-1][j][k] + phi[i+1][j][k] + phi[i][j-1][k] + phi[i][j+1][k] + phi[i][j][k-1] + phi[i][j][k+1] - 6*phi[i][j][k] - rho[i][j][k]*dx*dx
-        phi[i][j][k] = phi[i][j][k] + relax * residual / 6
+        phi[i][j][k] = phi[i][j][k] + relax * residual[i][j][k] / 6
 
   errorsum = 0
   for i in range(cells):
