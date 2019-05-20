@@ -12,7 +12,7 @@ particle = 10        # particle number in the box
 random = 0           # random initial condition (0:off, 1:on)
 
 # array
-if random = 1:       # random initial condition (0:off, 1:on)
+if random == 1:       # random initial condition (0:off, 1:on)
   m = np.zeros(particle)          # mass of particles (m)
   r = np.zeros((3, particle))     # coordinates of particles (x, y, z)
   v = np.zeros((3, particle))     # velocity of particles (vx, vy, vz)
