@@ -27,6 +27,8 @@ p = np.zeros((3, particle))       # momentum of particles (px, py, pz)
   
 rho = np.zeros((cells, cells, cells))      # empty 3D box of rho (ρ, density)
 phi = np.zeros((cells, cells, cells))      # empty 3D box of phi (Φ, potential field)
+residual = np.zeros((cells, cells, cells))
+force = np.zeros((3, cells, cells, cells))
 
 # derived constants
 dx = L/cells         # spatial resolution
@@ -74,16 +76,33 @@ def TSC()
 # Poisson solver
 # -------------------------------------------------------------------
 # ρ to Φ (parallel later)
-for i in range(cells):
-  for j in range(cells):
-    for k in range(cells):
-      phi[i][j][k] = (phi[i-1][j][k] + phi[i+1][j][k] + phi[i][j-1][k] + phi[i][j+1][k] + phi[i][j][k-1] + phi[i][j][k+1] - rho[i][j][k]*dx*dx) / 6
+relax = 1.6
 
+while errorsum > 10**(-12):
+  for i in range(cells):
+    for j in range(cells):
+      for k in range(cells):
+        residual[i][j][k] = phi[i-1][j][k] + phi[i+1][j][k] + phi[i][j-1][k] + phi[i][j+1][k] + phi[i][j][k-1] + phi[i][j][k+1] - 6*phi[i][j][k] - rho[i][j][k]*dx*dx
+        phi[i][j][k] = phi[i][j][k] + relax * residual / 6
+
+  errorsum = 0
+  for i in range(cells):
+    for j in range(cells):
+      for k in range(cells):
+        errorsum += abs(residual[i][j][k]/phi[i][j][k]) / cells**2
+      
 
 # FFT
 
 
 # inter-particle force
+for i in range(cells):
+    for j in range(cells):
+      for k in range(cells):
+        gfield[1][i][j][k] = -(phi[i+1][j][k]-phi[i-1][j][k])*0.5/dx
+        gfield[2][i][j][k] = -(phi[i][j+1][k]-phi[i][j-1][k])*0.5/dx
+        gfield[3][i][j][k] = -(phi[i][j][k+1]-phi[i][j][k-1])*0.5/dx
+
 
 # -------------------------------------------------------------------
 # Orbit integration (KDK, DKD)
