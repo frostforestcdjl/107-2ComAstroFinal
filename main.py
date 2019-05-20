@@ -44,19 +44,40 @@ for i in range(3):   # p = m*v
 # Deposit particle mass onto grid (NGP, CIC, TSC)
 # -------------------------------------------------------------------
 def NGP()
-
-
+  for i in range(particle):
+    for j in range(cells):
+      for k in range(cells):
+        for l in range(cells):
+          if abs(r[1][i] - (0.5*dx + j*dx)) < 0.5*dx and abs(r[2][i] - (0.5*dx + k*dx)) < 0.5*dx and abs(r[3][i] - (0.5*dx + l*dx)) < 0.5*dx:
+            rho[j][k][l] += m[particle]/dx
+            
 def CIC()
-
+  for i in range(particle):
+    for j in range(cells):
+      for k in range(cells):
+        for l in range(cells):
+          if abs(r[1][i] - (0.5*dx + j*dx)) < dx and abs(r[2][i] - (0.5*dx + k*dx)) < dx and abs(r[3][i] - (0.5*dx + l*dx)) < dx:
+            rho[j][k][l] += m[particle] * (1 - abs(r[1][i] - (0.5*dx + j*dx))/dx) * (1 - abs(r[2][i] - (0.5*dx + k*dx))/dx) * (1 - abs(r[3][i] - (0.5*dx + k*dx))/dx) / dx**3
 
 def TSC()
-    
-
-
+  for i in range(particle):
+    for j in range(cells):
+      for k in range(cells):
+        for l in range(cells):
+          if abs(r[1][i] - (0.5*dx + j*dx)) < (1.5*dx) and abs(r[2][i] - (0.5*dx + k*dx)) < (1.5*dx) and abs(r[3][i] - (0.5*dx + l*dx)) < (1.5*dx):
+            rho[j][k][l] += m[particle] * ((1 - round(abs(r[1][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[1][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[1][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (0.5*dx + j*dx))/dx)**2)) \
+              * ((1 - round(abs(r[2][i] - (0.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[2][i] - (0.5*dx + k*dx))/dx)**2) + round(abs(r[2][i] - (0.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (0.5*dx + k*dx))/dx)**2)) \
+              * ((1 - round(abs(r[3][i] - (0.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[3][i] - (0.5*dx + l*dx))/dx)**2) + round(abs(r[3][i] - (0.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[3][i] - (0.5*dx + l*dx))/dx)**2)) / dx**3
+      
+      
 # -------------------------------------------------------------------
 # Poisson solver
 # -------------------------------------------------------------------
-# ρ to Φ
+# ρ to Φ (parallel later)
+for i in range(cells):
+  for j in range(cells):
+    for k in range(cells):
+      phi[i][j][k] = (phi[i-1][j][k] + phi[i+1][j][k] + phi[i][j-1][k] + phi[i][j+1][k] + phi[i][j][k-1] + phi[i][j][k+1] - rho[i][j][k]*dx*dx) / 6
 
 
 # FFT
