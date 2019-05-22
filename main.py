@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import random
+import time
 
 #--------------------------------------------------------------------
 # parameters
@@ -9,39 +10,36 @@ import random
 L = 1.0              # 1-D conputational domain size
 cells = 16           # number of computing cells
 particle = 10        # particle number in the box
-random = 0           # random initial condition (0:off, 1:on)
-
-# array
-if random == 1:       # random initial condition (0:off, 1:on)
-  m = np.zeros(particle)          # mass of particles (m)
-  r = np.zeros((3, particle))     # coordinates of particles (x, y, z)
-  v = np.zeros((3, particle))     # velocity of particles (vx, vy, vz)
-  a = np.zeros((3, particle))     # acceleration of particles (ax, ay, az)
-else:
-  m = np.random.rand(particle)
-  r = np.random.rand(3, particle)
-  v = np.random.rand(3, particle)
-  a = np.random.rand(3, particle)
-
-p = np.zeros((3, particle))       # momentum of particles (px, py, pz)
-  
-rho = np.zeros((cells+2, cells+2, cells+2))      # empty 3D box of rho (ρ, density)
-phi = np.zeros((cells+2, cells+2, cells+2))      # empty 3D box of phi (Φ, potential field)
-residual = np.zeros((cells, cells, cells))
-force = np.zeros((3, cells, cells, cells))
+dt = 1.0e-2          # time interval for data update
+end_time = 0.1       # end time
 
 # derived constants
 dx = L/cells         # spatial resolution
-for i in range(3):   # p = m*v
-  for j in range(particle):
-    p[i][j] = m[j]*v[i][j]
-
 
 # -------------------------------------------------------------------
 # define initial condition
 # -------------------------------------------------------------------
+random = 0                                   # random initial condition (0:off, 1:on)
+# array
+if random == 1:                              # random initial condition (0:off, 1:on)
+  m = np.ones(particle)                      # mass of particles (m = 1)
+  r = np.zeros((3, particle))                # coordinates of particles (x, y, z = 0)
+  v = np.zeros((3, particle))                # velocity of particles (vx, vy, vz = 0)
+else:
+  m = np.random.rand(particle)               # mass of particles (m = [0,1])
+  r = np.random.rand(3, particle)            # coordinates of particles (x, y, z = [0,1])
+  v = np.random.normal(size=(3, particle))   # velocity of particles (vx, vy, vz = normal distribution)
+
+a = np.zeros((3, particle))                  # acceleration of particles (ax, ay, az = 0)
+p0 = m * v                                   # initial momentum
+
+rho = np.zeros((cells+2, cells+2, cells+2))  # empty 3D box of rho (ρ, density)
+phi = np.zeros((cells+2, cells+2, cells+2))  # empty 3D box of phi (Φ, potential field)
+residual = np.zeros((cells, cells, cells))
+force = np.zeros((3, cells, cells, cells))
 
 
+tStart = time.time()                         # Start timing
 # -------------------------------------------------------------------
 # Deposit particle mass onto grid (NGP, CIC, TSC)
 # -------------------------------------------------------------------
@@ -112,19 +110,45 @@ for i in range(cells):
 # Orbit integration (KDK, DKD)
 # -------------------------------------------------------------------
 def KDK()
-
-
-
+  for i in range(particle):
+    for j in range(3):
+      v[j][i] = v[j][i] + a[j][i]*0.5*dt      # (a) kick: calculate a(t+0.5*dt) and use that to update velocity by 0.5*dt
+      r[j][i] = r[j][i] + v[j][i]*dt          # (b) drift: update position by dt
+      v[j][i] = v[j][i] + a[j][i]*0.5*dt      # (c) kick: calculate a(t+0.5*dt) and use that to update velocity by 0.5*dt
+      
+  # update time
+  t = t + dt
+  if (t >= end_time): 
+    break
+      
 def DKD()
-
-
+  for i in range(particle):
+    for j in range(3):
+      r[j][i] = r[j][i] + v[j][i]*0.5*dt  # (a) drift: update position by 0.5*dt
+      v[j][i] = v[j][i] + a[j][i]*dt      # (b) kick: calculate a(t+0.5*dt) and use that to update velocity by dt
+      r[j][i] = r[j][i] + v[j][i]*0.5*dt  # (c) drift: update position by 0.5*dt
+      
+  # update time
+  t = t + dt
+  if (t >= end_time): 
+    break
+  
+tEnd = time.time()                         # End timing
 # -------------------------------------------------------------------
 # Measure the performance scaling
 # -------------------------------------------------------------------
-
-
-
+print('program time cost: ' + str(tEnd - tStart) + 's')
+print('number of cells/particles: ' + str(cells) + '/' + str(particles))
 
 # -------------------------------------------------------------------
 # Momentum conservation
 # -------------------------------------------------------------------
+pt = m * v
+p_diff = 0
+
+for i in range(particle):
+  for j in range(3):
+    p_diff += pt[j][i] - p0[j][i]
+    
+print('momentum difference is: ' + str(p_diff))
+
