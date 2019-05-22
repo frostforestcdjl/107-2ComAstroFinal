@@ -25,9 +25,8 @@ else:
 
 p = np.zeros((3, particle))       # momentum of particles (px, py, pz)
   
-rho = np.zeros((cells, cells, cells))      # empty 3D box of rho (ρ, density)
-phi = np.zeros((cells, cells, cells))      # empty 3D box of phi (Φ, potential field)
-phi_ghost = np.zeros((cells+2, cells+2, cells+2))
+rho = np.zeros((cells+2, cells+2, cells+2))      # empty 3D box of rho (ρ, density)
+phi = np.zeros((cells+2, cells+2, cells+2))      # empty 3D box of phi (Φ, potential field)
 residual = np.zeros((cells, cells, cells))
 force = np.zeros((3, cells, cells, cells))
 
@@ -41,7 +40,6 @@ for i in range(3):   # p = m*v
 # -------------------------------------------------------------------
 # define initial condition
 # -------------------------------------------------------------------
-# !!need to add ghost zones for phi!!
 
 
 # -------------------------------------------------------------------
@@ -52,26 +50,26 @@ def NGP()
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
-          if abs(r[1][i] - (0.5*dx + j*dx)) < 0.5*dx and abs(r[2][i] - (0.5*dx + k*dx)) < 0.5*dx and abs(r[3][i] - (0.5*dx + l*dx)) < 0.5*dx:
-            rho[j][k][l] += m[particle]/dx
+          if abs(r[1][i] - (1.5*dx + j*dx)) < 0.5*dx and abs(r[2][i] - (1.5*dx + k*dx)) < 0.5*dx and abs(r[3][i] - (1.5*dx + l*dx)) < 0.5*dx:
+            rho[j+1][k+1][l+1] += m[particle]/dx
             
 def CIC()
   for i in range(particle):
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
-          if abs(r[1][i] - (0.5*dx + j*dx)) < dx and abs(r[2][i] - (0.5*dx + k*dx)) < dx and abs(r[3][i] - (0.5*dx + l*dx)) < dx:
-            rho[j][k][l] += m[particle] * (1 - abs(r[1][i] - (0.5*dx + j*dx))/dx) * (1 - abs(r[2][i] - (0.5*dx + k*dx))/dx) * (1 - abs(r[3][i] - (0.5*dx + k*dx))/dx) / dx**3
+          if abs(r[1][i] - (1.5*dx + j*dx)) < dx and abs(r[2][i] - (1.5*dx + k*dx)) < dx and abs(r[3][i] - (1.5*dx + l*dx)) < dx:
+            rho[j+1][k+1][l+1] += m[particle] * (1 - abs(r[1][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[3][i] - (1.5*dx + k*dx))/dx) / dx**3
 
 def TSC()
   for i in range(particle):
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
-          if abs(r[1][i] - (0.5*dx + j*dx)) < (1.5*dx) and abs(r[2][i] - (0.5*dx + k*dx)) < (1.5*dx) and abs(r[3][i] - (0.5*dx + l*dx)) < (1.5*dx):
-            rho[j][k][l] += m[particle] * ((1 - round(abs(r[1][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[1][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[1][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (0.5*dx + j*dx))/dx)**2)) \
-              * ((1 - round(abs(r[2][i] - (0.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[2][i] - (0.5*dx + k*dx))/dx)**2) + round(abs(r[2][i] - (0.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (0.5*dx + k*dx))/dx)**2)) \
-              * ((1 - round(abs(r[3][i] - (0.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[3][i] - (0.5*dx + l*dx))/dx)**2) + round(abs(r[3][i] - (0.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[3][i] - (0.5*dx + l*dx))/dx)**2)) / dx**3
+          if abs(r[1][i] - (1.5*dx + j*dx)) < (1.5*dx) and abs(r[2][i] - (1.5*dx + k*dx)) < (1.5*dx) and abs(r[3][i] - (1.5*dx + l*dx)) < (1.5*dx):
+            rho[j][k][l] += m[particle] * ((1 - round(abs(r[1][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[1][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[1][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + j*dx))/dx)**2)) \
+              * ((1 - round(abs(r[2][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + k*dx))/dx)**2)) \
+              * ((1 - round(abs(r[3][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[3][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[3][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[3][i] - (1.5*dx + l*dx))/dx)**2)) / dx**3
       
       
 # -------------------------------------------------------------------
@@ -80,29 +78,13 @@ def TSC()
 # ρ to Φ (parallel later)
 relax = 1.6
 errorsum = 1
-
-def phi2phighost()
-for i in range(cells):
-    for j in range(cells):
-      for k in range(cells):
-        phi_ghost[i+1][j+1][k+1] = phi[i][j][k]
-        
-def phighost2phi()
-for i in range(cells):
-    for j in range(cells):
-      for k in range(cells):
-         phi[i][j][k] = phi_ghost[i+1][j+1][k+1]
-
-phi2phighost()
           
 while errorsum > 10**(-12):
   for i in range(cells):
     for j in range(cells):
       for k in range(cells):
-        residual[i][j][k] = phi_ghost[i][j+1][k+1] + phi_ghost[i+2][j+1][k+1] + phi_ghost[i+1][j][k+1] + phi_ghost[i+1][j+2][k+1] + phi_ghost[i+1][j+1][k] + phi_ghost[i+1][j+1][k+2] - 6*phi_ghost[i+1][j+1][k+1] - rho[i][j][k]*dx*dx
-        phi_ghost[i+1][j+1][k+1] = phi_ghost[i+1][j+1][k+1] + relax * residual[i][j][k] / 6
-
-  phighost2phi()
+        residual[i][j][k] = phi[i][j+1][k+1] + phi[i+2][j+1][k+1] + phi[i+1][j][k+1] + phi[i+1][j+2][k+1] + phi[i+1][j+1][k] + phi[i+1][j+1][k+2] - 6*phi[i+1][j+1][k+1] - rho[i][j][k]*dx*dx
+        phi[i+1][j+1][k+1] = phi[i+1][j+1][k+1] + relax * residual[i][j][k] / 6
   
   errorsum = 0
   for i in range(cells):
@@ -121,9 +103,9 @@ phiF = np.fft.irfft( -rhok/k**2 )
 for i in range(cells):
     for j in range(cells):
       for k in range(cells):
-        gfield[1][i][j][k] = -(phi[i+1][j][k]-phi[i-1][j][k])*0.5/dx
-        gfield[2][i][j][k] = -(phi[i][j+1][k]-phi[i][j-1][k])*0.5/dx
-        gfield[3][i][j][k] = -(phi[i][j][k+1]-phi[i][j][k-1])*0.5/dx
+        gfield[1][i][j][k] = -(phi[i+2][j+1][k+1]-phi[i][j+1][k+1])*0.5/dx
+        gfield[2][i][j][k] = -(phi[i+1][j+2][k+1]-phi[i+1][j][k+1])*0.5/dx
+        gfield[3][i][j][k] = -(phi[i+1][j+1][k+2]-phi[i+1][j+1][k])*0.5/dx
 
 
 # -------------------------------------------------------------------
