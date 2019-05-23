@@ -47,10 +47,10 @@ def interpolate_CIC(g,r,dx,particle,cells):
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
-          if abs(r[1][i] - (1.5*dx + j*dx)) < dx and abs(r[2][i] - (1.5*dx + k*dx)) < dx and abs(r[3][i] - (1.5*dx + l*dx)) < dx:
-               a[0][i] += g[0][j][k][l]* (1 - abs(r[1][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[3][i] - (1.5*dx + k*dx))/dx) 
-               a[1][i] += g[1][j][k][l]* (1 - abs(r[1][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[3][i] - (1.5*dx + k*dx))/dx) 
-               a[2][i] += g[2][j][k][l]* (1 - abs(r[1][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[3][i] - (1.5*dx + k*dx))/dx) 
+          if abs(r[0][i] - (1.5*dx + j*dx)) < dx and abs(r[1][i] - (1.5*dx + k*dx)) < dx and abs(r[2][i] - (1.5*dx + l*dx)) < dx:
+               a[0][i] += g[0][j][k][l]* (1 - abs(r[0][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[1][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) 
+               a[1][i] += g[1][j][k][l]* (1 - abs(r[0][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[1][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) 
+               a[2][i] += g[2][j][k][l]* (1 - abs(r[0][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[1][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) 
 
 def interpolate_TSC(g,r,dx,particle,cells):
   a = np.zeros((3, particle)) 
@@ -58,16 +58,16 @@ def interpolate_TSC(g,r,dx,particle,cells):
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
-          if abs(r[1][i] - (1.5*dx + j*dx)) < (1.5*dx) and abs(r[2][i] - (1.5*dx + k*dx)) < (1.5*dx) and abs(r[3][i] - (1.5*dx + l*dx)) < (1.5*dx):
-            a[0][i] += g[0][j][k][l]* ((1 - round(abs(r[1][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[1][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[1][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + j*dx))/dx)**2)) \
-              * ((1 - round(abs(r[2][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + k*dx))/dx)**2)) \
-              * ((1 - round(abs(r[3][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[3][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[3][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[3][i] - (1.5*dx + l*dx))/dx)**2))
-            a[1][i] += g[1][j][k][l]* ((1 - round(abs(r[1][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[1][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[1][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + j*dx))/dx)**2)) \
-              * ((1 - round(abs(r[2][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + k*dx))/dx)**2)) \
-              * ((1 - round(abs(r[3][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[3][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[3][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[3][i] - (1.5*dx + l*dx))/dx)**2))
-            a[2][i] += g[2][j][k][l]* ((1 - round(abs(r[1][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[1][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[1][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + j*dx))/dx)**2)) \
-              * ((1 - round(abs(r[2][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + k*dx))/dx)**2)) \
-              * ((1 - round(abs(r[3][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[3][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[3][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[3][i] - (1.5*dx + l*dx))/dx)**2))
+          if abs(r[0][i] - (1.5*dx + j*dx)) < (1.5*dx) and abs(r[1][i] - (1.5*dx + k*dx)) < (1.5*dx) and abs(r[2][i] - (1.5*dx + l*dx)) < (1.5*dx):
+            a[0][i] += g[0][j][k][l]* ((1 - round(abs(r[0][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[0][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[0][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[0][i] - (1.5*dx + j*dx))/dx)**2)) \
+              * ((1 - round(abs(r[1][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[1][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[1][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + k*dx))/dx)**2)) \
+              * ((1 - round(abs(r[2][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + l*dx))/dx)**2))
+            a[1][i] += g[1][j][k][l]* ((1 - round(abs(r[0][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[0][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[0][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[0][i] - (1.5*dx + j*dx))/dx)**2)) \
+              * ((1 - round(abs(r[1][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[1][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[1][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + k*dx))/dx)**2)) \
+              * ((1 - round(abs(r[2][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + l*dx))/dx)**2))
+            a[2][i] += g[2][j][k][l]* ((1 - round(abs(r[0][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[0][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[0][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[0][i] - (1.5*dx + j*dx))/dx)**2)) \
+              * ((1 - round(abs(r[1][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[1][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[1][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + k*dx))/dx)**2)) \
+              * ((1 - round(abs(r[2][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + l*dx))/dx)**2))
                 
                 
                 
