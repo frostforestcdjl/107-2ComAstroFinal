@@ -2,6 +2,7 @@ import numpy as np
 import math
 import random
 import time
+import Poisson_FFT
 
 #--------------------------------------------------------------------
 # parameters
@@ -93,9 +94,9 @@ while errorsum > 10**(-12):
       
 
 # FFT
-rhok = np.fft.rfft( rho )
-k = 0.5           #!!need to be replaced!!
-phiF = np.fft.irfft( -rhok/k**2 )
+N = 100 #number of cells in the k-space
+u = Poisson_FFT.FFT_solver(L,N) # potential
+g = Poisson_FFT.gravity(L,cells,u) #gravitational field
 
 
 # inter-particle force
