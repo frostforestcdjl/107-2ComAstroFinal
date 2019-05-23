@@ -19,6 +19,7 @@ dx = L/cells         # spatial resolution
 # -------------------------------------------------------------------
 # define initial condition
 # -------------------------------------------------------------------
+t = 0.0
 random = 0                                   # random initial condition (0:off, 1:on)
 # array
 if random == 1:                              # random initial condition (0:off, 1:on)
@@ -43,29 +44,29 @@ tStart = time.time()                         # Start timing
 # -------------------------------------------------------------------
 # Deposit particle mass onto grid (NGP, CIC, TSC)
 # -------------------------------------------------------------------
-def NGP()
+def NGP():
   for i in range(particle):
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
-          if abs(r[1][i] - (1.5*dx + j*dx)) < 0.5*dx and abs(r[2][i] - (1.5*dx + k*dx)) < 0.5*dx and abs(r[3][i] - (1.5*dx + l*dx)) < 0.5*dx:
-            rho[j+1][k+1][l+1] += m[particle]/dx
+          if abs(r[0][i] - (1.5*dx + j*dx)) < 0.5*dx and abs(r[1][i] - (1.5*dx + k*dx)) < 0.5*dx and abs(r[2][i] - (1.5*dx + l*dx)) < 0.5*dx:
+            rho[j+1][k+1][l+1] += m[i]/dx
             
-def CIC()
+def CIC():
   for i in range(particle):
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
           if abs(r[1][i] - (1.5*dx + j*dx)) < dx and abs(r[2][i] - (1.5*dx + k*dx)) < dx and abs(r[3][i] - (1.5*dx + l*dx)) < dx:
-            rho[j+1][k+1][l+1] += m[particle] * (1 - abs(r[1][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[3][i] - (1.5*dx + k*dx))/dx) / dx**3
+            rho[j+1][k+1][l+1] += m[i] * (1 - abs(r[1][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[3][i] - (1.5*dx + k*dx))/dx) / dx**3
 
-def TSC()
+def TSC():
   for i in range(particle):
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
           if abs(r[1][i] - (1.5*dx + j*dx)) < (1.5*dx) and abs(r[2][i] - (1.5*dx + k*dx)) < (1.5*dx) and abs(r[3][i] - (1.5*dx + l*dx)) < (1.5*dx):
-            rho[j][k][l] += m[particle] * ((1 - round(abs(r[1][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[1][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[1][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + j*dx))/dx)**2)) \
+            rho[j][k][l] += m[i] * ((1 - round(abs(r[1][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[1][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[1][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + j*dx))/dx)**2)) \
               * ((1 - round(abs(r[2][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + k*dx))/dx)**2)) \
               * ((1 - round(abs(r[3][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[3][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[3][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[3][i] - (1.5*dx + l*dx))/dx)**2)) / dx**3
       
@@ -109,7 +110,8 @@ for i in range(cells):
 # -------------------------------------------------------------------
 # Orbit integration (KDK, DKD)
 # -------------------------------------------------------------------
-def KDK()
+def KDK():
+  global t
   for i in range(particle):
     for j in range(3):
       v[j][i] = v[j][i] + a[j][i]*0.5*dt      # (a) kick: calculate a(t+0.5*dt) and use that to update velocity by 0.5*dt
@@ -121,7 +123,8 @@ def KDK()
   if (t >= end_time): 
     break
       
-def DKD()
+def DKD():
+  global t
   for i in range(particle):
     for j in range(3):
       r[j][i] = r[j][i] + v[j][i]*0.5*dt  # (a) drift: update position by 0.5*dt
