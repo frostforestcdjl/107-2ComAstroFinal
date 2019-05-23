@@ -3,6 +3,7 @@ import math
 import random
 import time
 
+
 #--------------------------------------------------------------------
 # parameters
 #--------------------------------------------------------------------
@@ -12,6 +13,7 @@ cells = 16           # number of computing cells
 particle = 10        # particle number in the box
 dt = 1.0e-2          # time interval for data update
 end_time = 0.1       # end time
+N = 100 #number of cells in the k-space
 
 # derived constants
 dx = L/cells         # spatial resolution
@@ -57,18 +59,18 @@ def CIC():
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
-          if abs(r[1][i] - (1.5*dx + j*dx)) < dx and abs(r[2][i] - (1.5*dx + k*dx)) < dx and abs(r[3][i] - (1.5*dx + l*dx)) < dx:
-            rho[j+1][k+1][l+1] += m[i] * (1 - abs(r[1][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[3][i] - (1.5*dx + k*dx))/dx) / dx**3
+          if abs(r[0][i] - (1.5*dx + j*dx)) < dx and abs(r[1][i] - (1.5*dx + k*dx)) < dx and abs(r[2][i] - (1.5*dx + l*dx)) < dx:
+            rho[j+1][k+1][l+1] += m[i] * (1 - abs(r[0][i] - (1.5*dx + j*dx))/dx) * (1 - abs(r[1][i] - (1.5*dx + k*dx))/dx) * (1 - abs(r[2][i] - (1.5*dx + k*dx))/dx) / dx**3
 
 def TSC():
   for i in range(particle):
     for j in range(cells):
       for k in range(cells):
         for l in range(cells):
-          if abs(r[1][i] - (1.5*dx + j*dx)) < (1.5*dx) and abs(r[2][i] - (1.5*dx + k*dx)) < (1.5*dx) and abs(r[3][i] - (1.5*dx + l*dx)) < (1.5*dx):
-            rho[j][k][l] += m[i] * ((1 - round(abs(r[1][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[1][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[1][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + j*dx))/dx)**2)) \
-              * ((1 - round(abs(r[2][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + k*dx))/dx)**2)) \
-              * ((1 - round(abs(r[3][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[3][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[3][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[3][i] - (1.5*dx + l*dx))/dx)**2)) / dx**3
+          if abs(r[0][i] - (1.5*dx + j*dx)) < (1.5*dx) and abs(r[1][i] - (1.5*dx + k*dx)) < (1.5*dx) and abs(r[2][i] - (1.5*dx + l*dx)) < (1.5*dx):
+            rho[j][k][l] += m[i] * ((1 - round(abs(r[0][i] - (0.5*dx + j*dx)) / dx)) * (0.75 - (abs(r[0][i] - (0.5*dx + j*dx))/dx)**2) + round(abs(r[0][i] - (0.5*dx + j*dx)) / dx) * (0.5*(1.5-abs(r[0][i] - (1.5*dx + j*dx))/dx)**2)) \
+              * ((1 - round(abs(r[1][i] - (1.5*dx + k*dx)) / dx)) * (0.75 - (abs(r[1][i] - (1.5*dx + k*dx))/dx)**2) + round(abs(r[1][i] - (1.5*dx + k*dx)) / dx) * (0.5*(1.5-abs(r[1][i] - (1.5*dx + k*dx))/dx)**2)) \
+              * ((1 - round(abs(r[2][i] - (1.5*dx + l*dx)) / dx)) * (0.75 - (abs(r[2][i] - (1.5*dx + l*dx))/dx)**2) + round(abs(r[2][i] - (1.5*dx + l*dx)) / dx) * (0.5*(1.5-abs(r[2][i] - (1.5*dx + l*dx))/dx)**2)) / dx**3
       
       
 # -------------------------------------------------------------------
@@ -91,20 +93,8 @@ while errorsum > 10**(-12):
       for k in range(cells):
         errorsum += abs(residual[i][j][k]/phi[i][j][k]) / cells**2
       
-
-# FFT
-rhok = np.fft.rfft( rho )
-k = 0.5           #!!need to be replaced!!
-phiF = np.fft.irfft( -rhok/k**2 )
-
-
-# inter-particle force
-for i in range(cells):
-    for j in range(cells):
-      for k in range(cells):
-        gfield[1][i][j][k] = -(phi[i+2][j+1][k+1]-phi[i][j+1][k+1])*0.5/dx
-        gfield[2][i][j][k] = -(phi[i+1][j+2][k+1]-phi[i+1][j][k+1])*0.5/dx
-        gfield[3][i][j][k] = -(phi[i+1][j+1][k+2]-phi[i+1][j+1][k])*0.5/dx
+#FFT
+import Poisson_FFT
 
 
 # -------------------------------------------------------------------
@@ -137,11 +127,48 @@ def DKD():
     break
   
 tEnd = time.time()                         # End timing
+
+# -------------------------------------------------------------------
+# Run the simulation
+# -------------------------------------------------------------------
+def update(m_scheme,v_scheme):
+    global rho, t, dt, L, N, dx, particle, cells, r
+    while t <= end_time-dt:
+        if m_scheme == 'NGP':
+            NGP()
+            u = Poisson_FFT.FFT_solver(rho,L,N) # potential
+            g = Poisson_FFT.gravity(u,L,cells) #gravitational field
+            Poisson_FFT.interpolate_NGP(g,r,dx,particle,cells)
+        elif m_scheme == 'CIC':
+            CIC()
+            u = Poisson_FFT.FFT_solver(rho,L,N) # potential
+            g = Poisson_FFT.gravity(u,L,cells) #gravitational field
+            Poisson_FFT.interpolate_CIC(g,r,dx,particle,cells)
+        elif m_scheme == 'TSC':
+            TSC()
+            u = Poisson_FFT.FFT_solver(rho,L,N) # potential
+            g = Poisson_FFT.gravity(u,L,cells) #gravitational field
+            Poisson_FFT.interpolate_TSC(g,r,dx,particle,cells)
+        else:
+            print 'Error: invalid scheme name for mass deposition'
+            break
+
+        if v_scheme == 'KDK':
+            KDK()
+        elif v_scheme == 'DKD':
+            DKD()
+        else:
+            print 'Error: invalid scheme name for position update'
+            break
+    
+        t += dt
+        print t
+
 # -------------------------------------------------------------------
 # Measure the performance scaling
 # -------------------------------------------------------------------
 print('program time cost: ' + str(tEnd - tStart) + 's')
-print('number of cells/particles: ' + str(cells) + '/' + str(particles))
+print('number of cells/particles: ' + str(cells) + '/' + str(particle))
 
 # -------------------------------------------------------------------
 # Momentum conservation
