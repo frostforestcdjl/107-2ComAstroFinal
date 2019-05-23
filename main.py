@@ -2,7 +2,7 @@ import numpy as np
 import math
 import random
 import time
-import Poisson_FFT
+
 
 #--------------------------------------------------------------------
 # parameters
@@ -13,6 +13,7 @@ cells = 16           # number of computing cells
 particle = 10        # particle number in the box
 dt = 1.0e-2          # time interval for data update
 end_time = 0.1       # end time
+N = 100 #number of cells in the k-space
 
 # derived constants
 dx = L/cells         # spatial resolution
@@ -92,20 +93,8 @@ while errorsum > 10**(-12):
       for k in range(cells):
         errorsum += abs(residual[i][j][k]/phi[i][j][k]) / cells**2
       
-
-# FFT
-N = 100 #number of cells in the k-space
-u = Poisson_FFT.FFT_solver(L,N) # potential
-g = Poisson_FFT.gravity(L,cells,u) #gravitational field
-
-
-# inter-particle force
-for i in range(cells):
-    for j in range(cells):
-      for k in range(cells):
-        gfield[1][i][j][k] = -(phi[i+2][j+1][k+1]-phi[i][j+1][k+1])*0.5/dx
-        gfield[2][i][j][k] = -(phi[i+1][j+2][k+1]-phi[i+1][j][k+1])*0.5/dx
-        gfield[3][i][j][k] = -(phi[i+1][j+1][k+2]-phi[i+1][j+1][k])*0.5/dx
+#FFT
+import Poisson_FFT
 
 
 # -------------------------------------------------------------------
@@ -138,11 +127,48 @@ def DKD():
     break
   
 tEnd = time.time()                         # End timing
+
+# -------------------------------------------------------------------
+# Run the simulation
+# -------------------------------------------------------------------
+def update(m_scheme,v_scheme):
+    global rho, t, dt, L, N, dx, particle, cells, r
+    while t <= end_time-dt:
+        if m_scheme == 'NGP':
+            NGP()
+            u = Poisson_FFT.FFT_solver(rho,L,N) # potential
+            g = Poisson_FFT.gravity(u,L,cells) #gravitational field
+            Poisson_FFT.interpolate_NGP(g,r,dx,particle,cells)
+        elif m_scheme == 'CIC':
+            CIC()
+            u = Poisson_FFT.FFT_solver(rho,L,N) # potential
+            g = Poisson_FFT.gravity(u,L,cells) #gravitational field
+            Poisson_FFT.interpolate_CIC(g,r,dx,particle,cells)
+        elif m_scheme == 'TSC':
+            TSC()
+            u = Poisson_FFT.FFT_solver(rho,L,N) # potential
+            g = Poisson_FFT.gravity(u,L,cells) #gravitational field
+            Poisson_FFT.interpolate_TSC(g,r,dx,particle,cells)
+        else:
+            print 'Error: invalid scheme name for mass deposition'
+            break
+
+        if v_scheme == 'KDK':
+            KDK()
+        elif v_scheme == 'DKD':
+            DKD()
+        else:
+            print 'Error: invalid scheme name for position update'
+            break
+    
+        t += dt
+        print t
+
 # -------------------------------------------------------------------
 # Measure the performance scaling
 # -------------------------------------------------------------------
 print('program time cost: ' + str(tEnd - tStart) + 's')
-print('number of cells/particles: ' + str(cells) + '/' + str(particles))
+print('number of cells/particles: ' + str(cells) + '/' + str(particle))
 
 # -------------------------------------------------------------------
 # Momentum conservation
