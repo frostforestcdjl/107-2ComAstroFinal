@@ -1,0 +1,157 @@
+#include <cstdio>
+#include <iostream>
+#include <cstdlib>
+#include <omp.h>
+#include <cmath>
+#include <time.h>
+using namespace std;
+
+int main( int argc, char *argv[] )
+{
+// set the number of threads
+    const int NThread = 4;
+    omp_set_num_threads( NThread );
+
+// initial condition
+    const int L = 1;
+    const int cells = 64;
+    float dx = L/cells;
+    float dt = 0.25*pow(dx, 2);
+    float t = 0;
+    float tf = 1;
+    float den = 10;
+    int center = cells%2;
+    int count;
+    float err = 1;
+    float errsum = 0;
+    float w = 1.66;
+    
+    float diff = 0;
+    float avg_diff = 0;
+    
+// initialize matrices
+    const int N = cells;
+    float rho[N][N], phy[N][N], pt[N][N], ana_phy[N][N], residual[N][N];
+    for (int i=0; i<N; i++) {
+        for (int j=0; j<N; j++) {
+            float r = ((pow(abs(i - 0.5*(cells-1)), 2) + pow(abs(j - 0.5*(cells-1)), 2)), 0.5);
+            ana_phy[i][j] = -den*pow(dx, 3) / (3*r);
+        }
+    }
+    float norm = ana_phy[0][0];
+        
+    for (int i=0; i<N; i++) {
+        for (int j=0; j<N; j++) {
+            ana_phy[i][j] = ana_phy[i][j]/norm - 1;
+        }
+    }
+        
+// initial of phi
+    for (int i=0; i<N; i++) {
+        for (int j=0; j<N; j++) {
+            pt[i][j] = ana_phy[i][j];
+        }
+    }
+        
+    for (int i=0; i<N-2; i++) {
+        for (int j=0; j<N-2; j++) {
+            pt[i+1][j+1] = 0;
+        }
+    }
+        
+    rho[center-1][center-1] = den;
+    rho[center-1][center] = den;
+    rho[center][center-1] = den;
+    rho[center][center] = den;
+        
+    clock_t t1, t2;
+    t1 = clock();
+
+    printf( "===========" );
+    cout << pt;
+    printf( "-----------" );
+    cout << rho;
+    printf( "===========" );
+    
+    while(err>pow(10, -14)){
+        errsum = 0;
+        err = 0;
+        for (int i=0; i<N-2; i++) {
+            for (int j=0; j<N-2; j++) {
+                residual[i+1][j+1] = pt[i+2][j+1] + pt[i][j+1] + pt[i+1][j] + pt[i+1][j+2] - 4*pt[i+1][j+1] - rho[i+1][j+1]*dx*dx;
+                pt[i+1][j+1] = pt[i+1][j+1] + w*residual[i+1][j+1]/4;
+                if (pt[i+1][j+1] != 0) {
+                    errsum = errsum + abs(residual[i+1][j+1]/pt[i+1][j+1]);
+                }
+            }
+        }
+        err = errsum / pow((cells-2), 2);
+        count = count + 1;
+    }
+        
+    t2 = clock();
+        
+    for (int i=0; i<N-2; i++) {
+        for (int j=0; j<N-2; j++) {
+            diff = diff + (pt[i+1][j+1] - ana_phy[i+1][j+1]);
+        }
+    }
+        
+    avg_diff = diff / pow((cells-2), 2);
+        
+    printf( "count: %d\n cells: %d\n avg_diff: %d\n", count, cells, avg_diff);
+    printf( "program time cost: %d s\n", (t2-t1));
+  
+    return EXIT_SUCCESS;
+}
+        
+/*
+#  pragma omp parallel
+   {
+      const int tid = omp_get_thread_num();
+      const int nt  = omp_get_num_threads();
+
+//    compute A = B dot C
+#     pragma omp for
+      for (int i=0; i<N; i++)
+      for (int j=0; j<N; j++)
+      {
+         C[i][j] = 0.0;
+
+         for (int t=0; t<N; t++)
+            C[i][j] += A[i][t]*B[t][j];
+
+         printf( "C[%2d][%2d] is computed by thread %d/%d\n", i, j, tid, nt );
+      }
+
+//    print the results
+#     pragma omp single
+      {
+         printf( "\nmatrix A:\n" );
+         for (int i=0; i<N; i++) {
+            for (int j=0; j<N; j++) {
+               printf( "  %5.0f", A[i][j] );
+            }
+            printf( "\n" );
+         }
+
+         printf( "\nmatrix B:\n" );
+         for (int i=0; i<N; i++) {
+            for (int j=0; j<N; j++) {
+               printf( "  %5.0f", B[i][j] );
+            }
+            printf( "\n" );
+         }
+
+         printf( "\nmatrix C = A dot B:\n" );
+         for (int i=0; i<N; i++) {
+            for (int j=0; j<N; j++) {
+               printf( "  %5.0f", C[i][j] );
+            }
+            printf( "\n" );
+         }
+      } // # pragma omp single
+   } // # pragma omp parallel
+
+ */
+
