@@ -12,13 +12,30 @@ int main( int argc, char *argv[] )
     const int NThread = 4;
     omp_set_num_threads( NThread );
 
-// initial condition
+// parameters
     const int L = 1;
-    const int cells = 64;
+    const int cells = 16;
+    const int particle = 10;
     float dx = L/cells;
     float dt = 0.25*pow(dx, 2);
+    float end_time = dt*20;
+    const int N = 100;
+    
     float t = 0;
-    float tf = 1;
+
+// arrays
+    const int m[particle];
+    float r[3][particle], v[3][particle], a[3][particle], p[3][particle], rho[cells+2][cells+2][cells+2], phi[cells+2][cells+2][cells+2], residual[cells][cells][cells], force[3][cells][cells][cells];
+
+// initial condition
+    for (int i=0; i<particle, i++){
+        m[i] = 1;
+        for (int j=0; j<3, j++){
+        r[j][i] = rand() / (RAND_MAX + 1.0);
+        v[j][i] = 
+        }
+    }
+
     float den = 10;
     int center = cells%2;
     int count;
