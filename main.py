@@ -2,7 +2,9 @@ import numpy as np
 import math
 import random
 import time
-
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from mpl_toolkits.mplot3d import Axes3D
 
 #--------------------------------------------------------------------
 # parameters
@@ -182,3 +184,41 @@ for i in range(particle):
     
 print('momentum difference is: ' + str(p_diff))
 
+
+# -------------------------------------------------------------------
+# Animation
+# -------------------------------------------------------------------
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ball, = ax.plot( [], [], [], 'ro', ms=10 )
+
+def animate(i):
+    ax.scatter(r[0][0], r[1][0], r[2][0])
+    
+ax.set_xlabel('X Label')
+ax.set_ylabel('Y Label')
+ax.set_zlabel('Z Label')
+
+def init():
+    global r
+    ball.set_data( [], [], [])
+    return ball
+
+
+def update(i):
+    global r, t
+    for step in range( nstep_per_image ):
+        r = r * r
+        t = t + dt
+        if ( t >= end_time ):   break
+    
+    
+    ball.set_data( r[0][0], r[1][0], r[2][0])
+    return ball
+
+
+ani = animation.FuncAnimation(fig, update, init_func=init, frames=600,
+                              interval=10, blit=False)
+
+
+plt.show()
