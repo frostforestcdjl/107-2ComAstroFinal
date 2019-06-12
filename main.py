@@ -182,3 +182,26 @@ for i in range(particle):
     
 print('momentum difference is: ' + str(p_diff))
 
+
+# -------------------------------------------------------------------
+# Animation and output mp4
+# -------------------------------------------------------------------
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
+
+def update_r(num):
+  global t, r
+  KDK()
+  graph._offsets3d = (r[0], r[1], r[2])
+  return graph,
+
+fig = plt.figure(figsize=(8, 8))
+ax = fig.add_subplot(111, projection="3d")
+graph = ax.scatter(r[0], r[1], r[2], color='darkblue')
+ax.set_xlim3d(-1, 1)
+ax.set_ylim3d(-1, 1)
+ax.set_zlim3d(-1, 1)
+
+ani = animation.FuncAnimation(fig, update_lines, frames=200, interval=50, blit=False)
+ani.save('PMcode_Ou&Lin.mp4', writer=writer)
+plt.show()
