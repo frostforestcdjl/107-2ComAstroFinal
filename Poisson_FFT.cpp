@@ -8,25 +8,6 @@
 
 #define PI 3.141592653589793
 
-void FFT_solver(float rho, float L, float N)
-{
-    
-    
-}
-
-void gravity(float gx,float gy, float gz, float u, float L, int cells)
-{
-    
-            }
-        }
-    }
-}
-
-void interpolate_CIC(float g, float r, float dx, int particle,int cells)
-{
-    
-}
-
 
 
 int main( int argc, char *argv[] )
