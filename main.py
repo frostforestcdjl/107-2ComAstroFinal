@@ -16,7 +16,7 @@ cells = 64           # number of computing cells
 N = cells
 particle = 10        # particle number in the box
 dt = 0.001          # time interval for data update
-end_time = 0.1       # end time
+end_time = 0.01       # end time
 
 # derived constants
 dx = L/cells         # spatial resolution
@@ -36,7 +36,9 @@ else:
   r = np.random.rand(3, particle)            # coordinates of particles (x, y, z = [0,1])
   v = np.random.normal(size=(3, particle))   # velocity of particles (vx, vy, vz = normal distribution)
 
-'''
+
+
+
 #Kepler motion
 particle = 2
 m = np.ones(particle)
@@ -44,7 +46,8 @@ r = np.array([[0.8,0.2],[0.5,0.5],[0.5,0.5]])
 G = 1.0
 M = 2.0
 v = np.array([[0.0,0.0],[( G*M/0.3 )**0.5,-( G*M/0.3 )**0.5],[0.0,0.0]])
-'''
+
+#dt = dx/(np.amax(v))   # time interval for data update (Courant-Friedrichs-Lewy condition)
 
 
 #a = np.zeros((3, particle))                  # acceleration of particles (ax, ay, az = 0)
@@ -56,7 +59,7 @@ residual = np.zeros((cells, cells, cells))
 force = np.zeros((3, cells, cells, cells))
 
 
-tStart = time.time()                         # Start timing
+
 # -------------------------------------------------------------------
 # Deposit particle mass onto grid (NGP, CIC, TSC)
 # -------------------------------------------------------------------
@@ -147,13 +150,13 @@ def DKD(a):
       
 
   
-tEnd = time.time()                         # End timing
+
 
                 
 # -------------------------------------------------------------------
 # Measure the performance scaling
 # -------------------------------------------------------------------
-print('program time cost: ' + str(tEnd - tStart) + 's')
+#print('program time cost: ' + str(tEnd - tStart) + 's')
 print('number of cells/particles: ' + str(cells) + '/' + str(particle))
 
 # -------------------------------------------------------------------
@@ -168,6 +171,7 @@ def momentum_conservation(m,v):
             p_diff += pt[j][i] - p0[j][i]
             
     print('momentum difference is: ' + str(p_diff))
+    return p_diff
 
 # -------------------------------------------------------------------
 # Run the simulation
@@ -177,9 +181,7 @@ def update(m_scheme,v_scheme):
     rx = np.empty(0)
     ry = np.empty(0)
     rz = np.empty(0)
-    vx = np.array([])
-    vy = np.array([])
-    vz = np.array([])
+    tStart = time.time()                         # Start timing
     while t <= end_time-dt:
         if m_scheme == 'NGP':
             NGP()
@@ -208,8 +210,9 @@ def update(m_scheme,v_scheme):
         else:
             print 'Error: invalid scheme name'
             break
+        
     
-        momentum_conservation(m,v)
+        p_diff = momentum_conservation(m,v)
         print v
         
         t += dt
@@ -223,7 +226,9 @@ def update(m_scheme,v_scheme):
         ry = np.concatenate((ry, r[1]),axis=0)
         rz = np.concatenate((rz, r[2]),axis=0)
         
-    return rx, ry, rz
+    tEnd = time.time()                         # End timing
+    print "time="+str(tEnd-tStart)
+    return rx, ry, rz, tdata, pdata
         
 
 rdata = update('CIC','KDK')
@@ -231,21 +236,7 @@ rx = rdata[0]
 ry = rdata[1]
 rz = rdata[2]
 
-'''
-Writer = animation.writers['ffmpeg']
-writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
-fig = plt.figure(figsize=(8, 8))
-ax = fig.add_subplot(111, projection="3d")
-graph = ax.scatter(r[0], r[1], r[2], color='darkblue')
-ax.set_xlim3d(0, 1)
-ax.set_ylim3d(0, 1)
-ax.set_zlim3d(0, 1)
-
-ani = animation.FuncAnimation(fig, update('CIC','KDK'), frames=200, interval=50, blit=False)
-#ani.save('PMcode_Ou&Lin.mp4', writer=writer)
-plt.show()
-'''
 r_data = {'rx':rx,
            'ry':ry,
            'rz':rz
@@ -254,9 +245,6 @@ r_data = {'rx':rx,
 
 df = pd.DataFrame(r_data)
 df.to_csv(path_or_buf='test_data.csv',index=True,line_terminator='\n')
-
-
-
 
 
 
