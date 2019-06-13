@@ -15,21 +15,22 @@ L = 1.0              # 1-D conputational domain size
 cells = 64           # number of computing cells
 N = cells
 particle = 10        # particle number in the box
-dt = 0.001          # time interval for data update
 end_time = 0.1       # end time
 
 # derived constants
 dx = L/cells         # spatial resolution
+dt = dx/(numpy.amax(v))   # time interval for data update (Courant-Friedrichs-Lewy condition)
+
 
 # -------------------------------------------------------------------
 # define initial condition
 # -------------------------------------------------------------------
 t = 0.0
-ran = 0                                   # random initial condition (0:off, 1:on)
+ran = 0                                      # random initial condition (0:off, 1:on)
 # array
-if ran == 0:                              # random initial condition (0:off, 1:on)
+if ran == 0:                                 # random initial condition (0:off, 1:on)
   m = np.ones(particle)                      # mass of particles (m = 1)
-  r = np.random.rand(3, particle)                # coordinates of particles (x, y, z = 0)
+  r = np.random.rand(3, particle)            # coordinates of particles (x, y, z = 0)
   v = np.zeros((3, particle))                # velocity of particles (vx, vy, vz = 0)
 else:
   m = np.random.rand(particle)               # mass of particles (m = [0,1])
@@ -46,12 +47,9 @@ M = 2.0
 v = np.array([[0.0,0.0],[( G*M/0.3 )**0.5,-( G*M/0.3 )**0.5],[0.0,0.0]])
 '''
 
-
-#a = np.zeros((3, particle))                  # acceleration of particles (ax, ay, az = 0)
-p0 = m * v                                   # initial momentum
-
-rho = np.zeros((cells+2, cells+2, cells+2))  # empty 3D box of rho (, density)
-phi = np.zeros((cells+2, cells+2, cells+2))  # empty 3D box of phi (, potential field)
+p0 = m * v                                    # initial momentum
+rho = np.zeros((cells+2, cells+2, cells+2))   # empty 3D box of rho (, density)
+phi = np.zeros((cells+2, cells+2, cells+2))   # empty 3D box of phi (, potential field)
 residual = np.zeros((cells, cells, cells))
 force = np.zeros((3, cells, cells, cells))
 
