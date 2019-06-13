@@ -8,15 +8,15 @@ import time
 # parameters
 #--------------------------------------------------------------------
 # constants
-L = 1.0              # 1-D conputational domain size
-cells = 16           # number of computing cells
-particle = 10        # particle number in the box
-dt = 1.0e-2          # time interval for data update
-end_time = 0.1       # end time
-N = 100 #number of cells in the k-space
+L = 1.0                   # 1-D conputational domain size
+cells = 16                # number of computing cells
+particle = 10             # particle number in the box
+end_time = 0.1            # end time
+N = 100                   # number of cells in the k-space
 
 # derived constants
-dx = L/cells         # spatial resolution
+dx = L/cells              # spatial resolution
+dt = dx/(numpy.amax(v))   # time interval for data update (Courant-Friedrichs-Lewy condition)
 
 # -------------------------------------------------------------------
 # define initial condition
