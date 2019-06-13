@@ -8,7 +8,6 @@ Created on Thu Jun 13 02:15:56 2019
 
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.animation as animation
 import pandas as pd
 
@@ -33,8 +32,6 @@ def data():
         r[2][i] = rz[t][i]
     t = t + 1
     
-    #if t >= rx.shape[0]:
-    #    break
 
 
 
